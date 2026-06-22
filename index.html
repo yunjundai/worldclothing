@@ -1,0 +1,2144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>世界服飾旅人 RPG</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #52606d;
+      --panel: #fffdf8;
+      --line: #d9cfc0;
+      --brand: #16697a;
+      --brand-dark: #0c4f5d;
+      --gold: #c88f2d;
+      --rose: #b23a48;
+      --green: #4f7f52;
+      --blue: #2f80a3;
+      --shadow: 0 18px 45px rgba(31, 41, 51, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(200, 143, 45, 0.2), transparent 24rem),
+        radial-gradient(circle at 86% 16%, rgba(47, 128, 163, 0.16), transparent 24rem),
+        linear-gradient(135deg, #f8ead4 0%, #eef5f0 48%, #e8f0f2 100%);
+    }
+
+    button {
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .intro-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #172b31;
+      overflow: hidden;
+      transition: opacity 420ms ease, transform 420ms ease, visibility 420ms ease;
+    }
+
+    .intro-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transform: translateY(-18px);
+    }
+
+    .intro-screen::before {
+      content: "";
+      position: absolute;
+      inset: -8%;
+      background:
+        linear-gradient(rgba(13, 33, 39, 0.28), rgba(13, 33, 39, 0.58)),
+        url("assets/world-map.webp") center / cover no-repeat;
+      animation: introDrift 14s ease-in-out infinite alternate;
+      filter: saturate(1.08);
+    }
+
+    .intro-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 0 34%, rgba(10, 23, 28, 0.74) 82%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 40%, rgba(255, 255, 255, 0.06));
+      pointer-events: none;
+    }
+
+    @keyframes introDrift {
+      from { transform: scale(1.06) translate3d(-1.6%, -1.2%, 0); }
+      to { transform: scale(1.13) translate3d(1.8%, 1.3%, 0); }
+    }
+
+    .intro-panel {
+      position: relative;
+      z-index: 2;
+      width: min(920px, 100%);
+      display: grid;
+      gap: 18px;
+      color: white;
+      text-align: center;
+    }
+
+    .intro-kicker {
+      justify-self: center;
+      padding: 8px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      font-weight: 900;
+      backdrop-filter: blur(8px);
+      animation: introRise 520ms ease both;
+    }
+
+    .intro-title {
+      margin: 0;
+      font-size: clamp(2.5rem, 7vw, 6.2rem);
+      line-height: 1;
+      text-shadow: 0 16px 28px rgba(0, 0, 0, 0.32);
+      animation: introRise 720ms 120ms ease both;
+    }
+
+    .intro-copy {
+      max-width: 760px;
+      margin: 0 auto;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      animation: introRise 720ms 220ms ease both;
+    }
+
+    @keyframes introRise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .character-select {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 8px auto 0;
+      width: min(620px, 100%);
+      animation: introRise 720ms 320ms ease both;
+    }
+
+    .character-card {
+      min-height: 230px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 8px;
+      background: rgba(255, 253, 248, 0.88);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      gap: 8px;
+      padding: 14px;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+    }
+
+    .character-card.active {
+      outline: 4px solid rgba(200, 143, 45, 0.52);
+      border-color: var(--gold);
+    }
+
+    .character-card img {
+      width: 120px;
+      height: 146px;
+      object-fit: contain;
+      animation: characterBounce 1.25s ease-in-out infinite alternate;
+      filter: drop-shadow(0 12px 10px rgba(31, 41, 51, 0.24));
+    }
+
+    .character-card:nth-child(2) img {
+      animation-delay: 160ms;
+    }
+
+    @keyframes characterBounce {
+      from { transform: translateY(0) rotate(-1deg); }
+      to { transform: translateY(-10px) rotate(1deg); }
+    }
+
+    .start-btn {
+      justify-self: center;
+      min-height: 58px;
+      min-width: 210px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 28px;
+      background: var(--gold);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
+      animation: introRise 720ms 420ms ease both;
+    }
+
+    .shell {
+      width: min(1480px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 16px 0 24px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      color: var(--brand-dark);
+      font-size: 0.92rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 5vw, 4.7rem);
+      line-height: 1.02;
+      max-width: 920px;
+    }
+
+    .lead {
+      margin: 11px 0 0;
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.75;
+      white-space: pre-line;
+    }
+
+    [data-i18n],
+    .intro-copy,
+    .map-log,
+    .battle-log,
+    .country-note,
+    .hint,
+    .question,
+    .garment-name,
+    .landmark small,
+    .action-btn,
+    .primary,
+    .secondary,
+    .option span {
+      white-space: pre-line;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .audio-btn {
+      min-height: 46px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .audio-btn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 16px;
+      color: var(--brand-dark);
+      background: rgba(255, 253, 248, 0.82);
+      box-shadow: 0 8px 20px rgba(31, 41, 51, 0.08);
+    }
+
+    .audio-btn.active {
+      border-color: rgba(22, 105, 122, 0.5);
+      background: rgba(22, 105, 122, 0.12);
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      min-height: 64px;
+      border: 1px solid rgba(217, 207, 192, 0.9);
+      background: rgba(255, 253, 248, 0.84);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 24px rgba(31, 41, 51, 0.08);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 5px;
+      font-weight: 800;
+    }
+
+    .stat strong {
+      font-size: 1.22rem;
+      line-height: 1;
+    }
+
+    .hearts,
+    .badges {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .heart {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--rose);
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .heart.empty {
+      background: #dbcfc1;
+    }
+
+    .xp {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #eadfce;
+      margin-top: 8px;
+    }
+
+    .xp div {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--gold));
+      transition: width 260ms ease;
+    }
+
+    .badge {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #f1e6d6;
+      color: var(--muted);
+      overflow: hidden;
+    }
+
+    .badge.earned {
+      background: var(--badge-color, var(--gold));
+      color: white;
+      border-color: var(--badge-color, var(--gold));
+    }
+
+    .badge svg,
+    .completion-badge svg {
+      width: 82%;
+      height: 82%;
+      display: block;
+    }
+
+    body.modal-open::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 44;
+      background: rgba(14, 27, 32, 0.46);
+      backdrop-filter: blur(3px);
+    }
+
+    .adventure {
+      position: relative;
+      display: block;
+    }
+
+    .world-card,
+    .encounter-card {
+      border: 1px solid rgba(217, 207, 192, 0.92);
+      background: rgba(255, 253, 248, 0.9);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .world-card {
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 12px;
+      min-height: calc(100svh - 32px);
+    }
+
+    body.game-started .shell {
+      padding-top: 10px;
+    }
+
+    body.game-started .topbar {
+      display: none;
+    }
+
+    .world-header,
+    .encounter-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .world-header-controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .voice-btn {
+      min-height: 38px;
+      padding: 0 12px;
+      font-size: 0.9rem;
+      box-shadow: none;
+    }
+
+    .pill {
+      border: 1px solid rgba(22, 105, 122, 0.28);
+      color: var(--brand-dark);
+      background: rgba(22, 105, 122, 0.08);
+      padding: 9px 13px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 0.95rem;
+    }
+
+    .map-status {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .world-map {
+      position: relative;
+      min-height: clamp(430px, calc(100svh - 196px), 780px);
+      overflow: hidden;
+      border: 1px solid rgba(217, 207, 192, 0.95);
+      border-radius: 8px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 253, 248, 0.08)),
+        url("assets/world-map.webp") center / cover no-repeat;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .map-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 0 54%, rgba(31, 41, 51, 0.16) 100%);
+      pointer-events: none;
+    }
+
+    .landmark {
+      position: absolute;
+      width: 94px;
+      min-height: 58px;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      gap: 3px;
+      padding: 8px 7px;
+      border: 1px solid rgba(217, 207, 192, 0.8);
+      border-radius: 8px;
+      background: rgba(255, 253, 248, 0.82);
+      color: var(--brand-dark);
+      text-align: center;
+      box-shadow: 0 10px 20px rgba(31, 41, 51, 0.16);
+      font-weight: 900;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .landmark small {
+      font-size: 0.72rem;
+      line-height: 1.18;
+    }
+
+    .landmark.near {
+      outline: 4px solid rgba(200, 143, 45, 0.45);
+      border-color: var(--gold);
+    }
+
+    .landmark.done {
+      color: var(--green);
+      border-color: rgba(79, 127, 82, 0.62);
+      background: rgba(244, 250, 244, 0.9);
+    }
+
+    .scan-ring {
+      position: absolute;
+      width: 124px;
+      height: 124px;
+      border: 2px dashed rgba(255, 253, 248, 0.72);
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pulse 1.8s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.42; transform: translate(-50%, -50%) scale(0.96); }
+      50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.04); }
+    }
+
+    .player {
+      --face: 1;
+      position: absolute;
+      width: 68px;
+      height: 82px;
+      transform: translate(-50%, -88%);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .player.face-left {
+      --face: -1;
+    }
+
+    .player::after {
+      content: "";
+      position: absolute;
+      left: 16%;
+      right: 16%;
+      bottom: 0;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(31, 41, 51, 0.24);
+      filter: blur(1px);
+    }
+
+    .player img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 8px rgba(31, 41, 51, 0.2));
+      animation: idleFloat 1.8s ease-in-out infinite alternate;
+    }
+
+    .player.moving img {
+      animation: walkBounce 360ms ease-in-out infinite alternate;
+    }
+
+    @keyframes idleFloat {
+      from { transform: translateY(0) scaleX(var(--face)); }
+      to { transform: translateY(-4px) scaleX(var(--face)); }
+    }
+
+    @keyframes walkBounce {
+      from { transform: translateY(0) scaleX(var(--face)) rotate(-3deg); }
+      to { transform: translateY(-9px) scaleX(var(--face)) rotate(3deg); }
+    }
+
+    .joystick {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      width: 150px;
+      height: 150px;
+      border: 1px solid rgba(22, 105, 122, 0.35);
+      border-radius: 999px;
+      background: rgba(255, 253, 248, 0.68);
+      box-shadow: 0 14px 28px rgba(31, 41, 51, 0.2);
+      touch-action: none;
+      z-index: 8;
+    }
+
+    .joystick::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: inherit;
+      border: 1px dashed rgba(22, 105, 122, 0.28);
+    }
+
+    .joystick-handle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 66px;
+      height: 66px;
+      display: grid;
+      place-items: center;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: var(--brand);
+      color: white;
+      font-weight: 900;
+      box-shadow: 0 10px 18px rgba(31, 41, 51, 0.26);
+      pointer-events: none;
+    }
+
+    .action-btn {
+      position: absolute;
+      right: 24px;
+      bottom: 32px;
+      width: 132px;
+      height: 76px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--gold);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(31, 41, 51, 0.22);
+      z-index: 8;
+    }
+
+    .action-btn:disabled {
+      background: #c7bba9;
+      cursor: default;
+    }
+
+    .map-log {
+      min-height: 62px;
+      border-left: 5px solid var(--brand);
+      background: rgba(22, 105, 122, 0.08);
+      padding: 12px 13px;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+
+    .encounter-card {
+      position: fixed;
+      z-index: 45;
+      left: 50%;
+      top: 50%;
+      width: min(940px, calc(100% - 32px));
+      max-height: min(92svh, 860px);
+      overflow: auto;
+      padding: clamp(12px, 2vw, 18px);
+      display: grid;
+      grid-template-rows: auto auto auto auto minmax(86px, 1fr) auto;
+      gap: clamp(9px, 1.7vw, 13px);
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transform: translate(-50%, -50%) scale(0.98);
+      transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+    }
+
+    .encounter-card.active {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .encounter-card.locked {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .encounter-card.complete-card {
+      text-align: center;
+      border-color: rgba(200, 143, 45, 0.82);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(200, 143, 45, 0.22), transparent 18rem),
+        rgba(255, 253, 248, 0.96);
+    }
+
+    .complete-card .encounter-header,
+    .complete-card .panel-actions {
+      justify-content: center;
+    }
+
+    .complete-card #panelBtn {
+      display: none;
+    }
+
+    .complete-card .garment-view {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+
+    .complete-card .garment-image {
+      width: clamp(118px, 20vw, 178px);
+      height: clamp(138px, 23vw, 210px);
+      animation: victoryBounce 1.2s ease-in-out infinite alternate;
+    }
+
+    .complete-card .question {
+      color: var(--brand-dark);
+      font-size: clamp(1.28rem, 3vw, 2rem);
+    }
+
+    .complete-card .options {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-width: 540px;
+      justify-self: center;
+      width: 100%;
+    }
+
+    .completion-badge {
+      min-height: 68px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      border: 1px solid rgba(200, 143, 45, 0.7);
+      background: var(--badge-soft, rgba(200, 143, 45, 0.16));
+      color: var(--badge-color, var(--brand-dark));
+      overflow: hidden;
+    }
+
+    .completion-badge svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    @keyframes victoryBounce {
+      from { transform: translateY(0) rotate(-1deg); }
+      to { transform: translateY(-8px) rotate(1deg); }
+    }
+
+    .progress {
+      height: 11px;
+      background: #eadfce;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress div {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--brand), var(--gold));
+      border-radius: inherit;
+      transition: width 260ms ease;
+    }
+
+    .garment-view {
+      display: grid;
+      grid-template-columns: clamp(92px, 15vw, 150px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+    }
+
+    .garment-image {
+      width: clamp(92px, 15vw, 150px);
+      height: clamp(108px, 17vw, 176px);
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid rgba(217, 207, 192, 0.95);
+      background: #f6efe4;
+      box-shadow: 0 16px 28px rgba(31, 41, 51, 0.13);
+    }
+
+    .garment-copy {
+      display: grid;
+      gap: 8px;
+    }
+
+    .garment-name {
+      margin: 0;
+      font-size: clamp(1.12rem, 2.4vw, 1.56rem);
+      line-height: 1.22;
+    }
+
+    .country-note,
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.62;
+    }
+
+    .question {
+      margin: 0;
+      font-size: clamp(1rem, 2.2vw, 1.35rem);
+      line-height: 1.3;
+    }
+
+    .question-block {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(8px, 1.5vw, 10px);
+      align-content: start;
+    }
+
+    .option {
+      min-height: clamp(58px, 8svh, 76px);
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--ink);
+      text-align: left;
+      padding: clamp(9px, 1.6vw, 13px) clamp(10px, 1.8vw, 14px);
+      font-weight: 900;
+      display: grid;
+      gap: 4px;
+      overflow-wrap: anywhere;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .option span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .option:hover:not(:disabled),
+    .option:focus-visible,
+    .action-btn:focus-visible {
+      transform: translateY(-2px);
+      outline: 3px solid rgba(22, 105, 122, 0.16);
+    }
+
+    .option.correct {
+      background: rgba(79, 127, 82, 0.14);
+      border-color: var(--green);
+    }
+
+    .option.wrong {
+      background: rgba(178, 58, 72, 0.12);
+      border-color: var(--rose);
+    }
+
+    .option:disabled {
+      cursor: default;
+    }
+
+    .battle-log {
+      min-height: 86px;
+      max-height: clamp(112px, 20svh, 190px);
+      overflow: auto;
+      min-width: 0;
+      border-left: 5px solid var(--gold);
+      background: rgba(248, 234, 212, 0.48);
+      padding: 13px 14px;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+
+    .battle-log strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .primary,
+    .secondary {
+      min-height: 48px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      padding: 11px 18px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .primary {
+      background: var(--brand);
+      color: white;
+    }
+
+    .primary:disabled {
+      background: #a8b8bb;
+      cursor: default;
+    }
+
+    .secondary {
+      background: transparent;
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    @media (min-width: 700px) and (max-width: 1180px) {
+      .shell {
+        width: min(100% - 32px, 1120px);
+        padding-top: 18px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .adventure {
+        display: block;
+      }
+
+      .world-card {
+        min-height: calc(100svh - 28px);
+      }
+
+      .world-map {
+        min-height: clamp(430px, calc(100svh - 194px), 760px);
+      }
+
+      .joystick {
+        width: 142px;
+        height: 142px;
+      }
+
+      .action-btn {
+        width: 128px;
+        height: 74px;
+      }
+
+      .encounter-card {
+        max-height: 90svh;
+        grid-template-columns: minmax(180px, 0.78fr) minmax(0, 1.22fr);
+        grid-template-rows: auto auto auto auto minmax(74px, auto) auto;
+        grid-template-areas:
+          "header header"
+          "progress progress"
+          "garment question"
+          "garment options"
+          "log log"
+          "actions actions";
+        align-items: start;
+      }
+
+      .encounter-header {
+        grid-area: header;
+      }
+
+      .progress {
+        grid-area: progress;
+      }
+
+      .garment-view {
+        grid-area: garment;
+        grid-template-columns: 1fr;
+        gap: 9px;
+      }
+
+      .garment-image {
+        width: min(100%, 150px);
+        height: 176px;
+        justify-self: center;
+      }
+
+      .question-block {
+        grid-area: question;
+      }
+
+      .options {
+        grid-area: options;
+      }
+
+      .battle-log {
+        grid-area: log;
+        max-height: 18svh;
+      }
+
+      .panel-actions {
+        grid-area: actions;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .world-card {
+        min-height: auto;
+      }
+
+      .world-map {
+        min-height: clamp(420px, calc(100svh - 280px), 620px);
+      }
+    }
+
+    @media (min-width: 700px) and (max-height: 900px) {
+      .world-card {
+        gap: 9px;
+        padding: 12px;
+        min-height: calc(100svh - 20px);
+      }
+
+      .stat {
+        min-height: 56px;
+        padding: 8px 10px;
+      }
+
+      .stat span {
+        margin-bottom: 3px;
+      }
+
+      .world-map {
+        min-height: clamp(390px, calc(100svh - 270px), 560px);
+      }
+
+      .map-log {
+        min-height: 48px;
+        padding: 9px 11px;
+        line-height: 1.45;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .shell {
+        width: min(100% - 20px, 1240px);
+        padding: 16px 0 24px;
+      }
+
+      .topbar,
+      .character-select {
+        grid-template-columns: 1fr;
+      }
+
+      .hud {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      h1 {
+        font-size: 2.1rem;
+      }
+
+      .toolbar {
+        justify-content: stretch;
+      }
+
+      .audio-btn {
+        flex: 1 1 auto;
+      }
+
+      .world-card {
+        padding: 12px;
+      }
+
+      .world-map {
+        min-height: clamp(430px, calc(100svh - 266px), 560px);
+      }
+
+      .landmark {
+        width: 78px;
+        min-height: 50px;
+        font-size: 0.78rem;
+      }
+
+      .joystick {
+        left: 14px;
+        bottom: 14px;
+        width: 132px;
+        height: 132px;
+      }
+
+      .joystick-handle {
+        width: 58px;
+        height: 58px;
+      }
+
+      .action-btn {
+        right: 14px;
+        bottom: 22px;
+        width: 116px;
+        height: 68px;
+      }
+
+      .encounter-card {
+        width: min(100% - 20px, 620px);
+        max-height: 94svh;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto minmax(72px, 1fr) auto;
+        grid-template-areas:
+          "header"
+          "progress"
+          "garment"
+          "question"
+          "options"
+          "log"
+          "actions";
+      }
+
+      .garment-view {
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .garment-image {
+        width: 88px;
+        height: 106px;
+      }
+
+      .option {
+        min-height: 56px;
+      }
+
+      .panel-actions > button {
+        flex: 1 1 150px;
+      }
+
+      .complete-card .options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-height: 700px) {
+      .encounter-card {
+        max-height: 96svh;
+      }
+
+      .garment-view {
+        grid-template-columns: 80px minmax(0, 1fr);
+      }
+
+      .garment-image {
+        width: 80px;
+        height: 96px;
+      }
+
+      .country-note,
+      .hint {
+        line-height: 1.42;
+      }
+
+      .option {
+        min-height: 50px;
+      }
+
+      .battle-log {
+        min-height: 72px;
+        max-height: 18svh;
+        line-height: 1.5;
+      }
+
+      .primary,
+      .secondary {
+        min-height: 42px;
+        padding-block: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="intro-screen" id="introScreen">
+    <div class="intro-panel">
+      <div class="intro-kicker" data-i18n="introKicker">開場動畫</div>
+      <h1 class="intro-title" data-i18n="introTitle">世界服飾旅人</h1>
+      <p class="intro-copy" data-i18n="introCopy">選擇主角，進入地圖，自由尋找各地代表服飾守護者。</p>
+      <div class="character-select" id="characterSelect">
+        <button type="button" class="character-card active" data-character="male">
+          <img src="assets/hero-male.webp" alt="">
+          <span data-i18n="maleHero">男旅人</span>
+        </button>
+        <button type="button" class="character-card" data-character="female">
+          <img src="assets/hero-female.webp" alt="">
+          <span data-i18n="femaleHero">女旅人</span>
+        </button>
+      </div>
+      <button type="button" class="start-btn" id="startBtn" data-i18n="startGame">開始旅程</button>
+    </div>
+  </section>
+
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow" data-i18n="eyebrow">文化旅人 RPG</div>
+        <h1 data-i18n="title">世界服飾旅人</h1>
+        <p class="lead" data-i18n="lead">操作主角在生成地圖上自由探索，靠近任一服飾地點後觸發文化遭遇，收集六枚代表服飾徽章。</p>
+      </div>
+      <div class="toolbar" aria-label="Game controls">
+        <button type="button" class="audio-btn" id="musicBtn" data-i18n="musicOff">音樂</button>
+        <button type="button" class="audio-btn active" id="soundBtn" data-i18n="soundOn">音效開</button>
+      </div>
+    </header>
+
+    <section class="adventure">
+      <article class="world-card">
+        <div class="world-header">
+          <span class="pill" id="worldTitle"></span>
+          <div class="world-header-controls">
+            <button type="button" class="audio-btn voice-btn" id="mapMusicBtn" data-i18n="musicOff">音樂</button>
+            <button type="button" class="audio-btn voice-btn active" id="voiceBtn" data-i18n="voiceOn">語音開</button>
+            <span class="map-status" id="mapStatus"></span>
+          </div>
+        </div>
+    <section class="hud" aria-label="Player status">
+      <div class="stat">
+        <span data-i18n="statRank">旅人等級</span>
+        <strong id="rank">Lv. 1</strong>
+        <div class="xp" aria-hidden="true"><div id="xpBar"></div></div>
+      </div>
+      <div class="stat">
+        <span data-i18n="statHp">HP</span>
+        <div class="hearts" id="hearts"></div>
+      </div>
+      <div class="stat">
+        <span data-i18n="statScore">分數</span>
+        <strong id="score">0</strong>
+      </div>
+      <div class="stat">
+        <span data-i18n="statBadges">徽章</span>
+        <div class="badges" id="badges"></div>
+      </div>
+    </section>
+        <div class="world-map" id="worldMap" aria-label="World exploration map">
+          <div class="map-vignette" aria-hidden="true"></div>
+          <div class="player" id="player" aria-hidden="true">
+            <img id="playerSprite" src="assets/hero-male.webp" alt="">
+          </div>
+          <div class="joystick" id="joystick" aria-label="Movement joystick" role="application">
+            <div class="joystick-handle" id="joystickHandle">MOVE</div>
+          </div>
+          <button type="button" class="action-btn" id="actionBtn" disabled>探索</button>
+        </div>
+        <div class="map-log" id="mapLog" aria-live="polite"></div>
+      </article>
+
+      <article class="encounter-card locked" id="encounterCard">
+        <div class="encounter-header">
+          <span class="pill" id="encounterLabel"></span>
+          <span class="map-status" id="progressLabel"></span>
+        </div>
+        <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+        <div class="garment-view">
+          <img class="garment-image" id="garmentImage" alt="">
+          <div class="garment-copy">
+            <h2 class="garment-name" id="garmentName"></h2>
+            <p class="country-note" id="garmentNote"></p>
+          </div>
+        </div>
+        <div class="question-block">
+          <h2 class="question" id="question"></h2>
+          <p class="hint" id="hint"></p>
+        </div>
+        <div class="options" id="options"></div>
+        <div class="battle-log" id="battleLog" aria-live="polite"></div>
+        <div class="panel-actions">
+          <button type="button" class="primary" id="panelBtn" disabled></button>
+          <button type="button" class="secondary" id="restartBtn" data-i18n="restart">重新開始</button>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <script>
+    const copy = {
+      zh: {
+        introKicker: "徽章挑戰",
+        introTitle: "世界服飾挑戰賽",
+        introCopy: "選擇旅人，完成六個服飾守護者的徽章試煉。",
+        maleHero: "男旅人",
+        femaleHero: "女旅人",
+        startGame: "開始闖關",
+        eyebrow: "文化挑戰 RPG",
+        title: "世界服飾挑戰賽",
+        lead: "在地圖上尋找亮點，靠近服飾守護者後開始挑戰。答對題目、收集徽章，完成六關就是文化闖關王！",
+        musicOff: "音樂",
+        musicOn: "音樂中",
+        soundOn: "音效開",
+        soundOff: "音效關",
+        voiceOn: "語音開",
+        voiceOff: "語音關",
+        statRank: "旅人等級",
+        statHp: "HP",
+        statScore: "分數",
+        statBadges: "徽章",
+        worldTitle: "徽章試煉地圖",
+        ready: "可以挑戰",
+        approaching: "尋找試煉",
+        complete: "挑戰完成",
+        actionExplore: "開始挑戰",
+        actionApproach: "靠近亮點",
+        question: "守護者出題：這套代表服飾最常被聯想到哪個國家？",
+        lockedEncounter: "尚未進入試煉。移動到地圖亮點旁，找到下一位服飾守護者。",
+        mapGuide: "地圖上的亮點都是試煉點。靠近還沒完成的亮點，就能開始答題挑戰。",
+        nearGuide: (name) => `已抵達 ${name} 試煉點，按下「開始挑戰」吧！`,
+        correct: "徽章到手！",
+        wrong: "再觀察一次！",
+        tryAgain: "HP -1。這個選項已排除，觀察提示後再挑戰一次。",
+        fallen: "HP 用完了，旅人需要回營地整理線索。",
+        rest: "營地休整",
+        restLog: "旅人整理筆記，HP 已恢復，可以重新出發挑戰。",
+        returnMap: "回到地圖",
+        restart: "重新挑戰",
+        optionAction: "選項",
+        encounter: (name) => `${name} 守護者`,
+        progress: (done, total) => `徽章 ${done}/${total}`,
+        rank: (rank) => `Lv. ${rank}`,
+        xpLabel: (xp) => `${xp % 100} / 100 XP`,
+        final: (score, right, total) => `闖關完成！你得到 ${score} 分，收集 ${right}/${total} 枚徽章。`,
+        finalLead: "六關全部完成，你已經成為世界服飾闖關王！",
+        finalScore: (score, right, total) => `總分 ${score}｜徽章 ${right}/${total}｜文化觀察力滿點`,
+        reward: (xp, score) => `挑戰成功！獲得 ${xp} XP、${score} 分，新的徽章已加入背包。`,
+        previewTitle: "等待挑戰"
+      },
+      en: {
+        introKicker: "Badge Challenge",
+        introTitle: "World Dress Challenge",
+        introCopy: "Choose a traveler and win six dress badges.",
+        maleHero: "Male Traveler",
+        femaleHero: "Female Traveler",
+        startGame: "Start Challenge",
+        eyebrow: "Culture Challenge RPG",
+        title: "World Dress Challenge",
+        lead: "Find bright spots on the map. Answer each guardian and collect all six badges.",
+        musicOff: "Music",
+        musicOn: "Music On",
+        soundOn: "SFX On",
+        soundOff: "SFX Off",
+        voiceOn: "Voice On",
+        voiceOff: "Voice Off",
+        statRank: "Traveler Rank",
+        statHp: "HP",
+        statScore: "Score",
+        statBadges: "Badges",
+        worldTitle: "Badge Trial Map",
+        ready: "Challenge Ready",
+        approaching: "Find a Trial",
+        complete: "Challenge Complete",
+        actionExplore: "Start Trial",
+        actionApproach: "Approach Point",
+        question: "Look closely! Which country matches this outfit?",
+        lockedEncounter: "No trial yet. Move to a bright spot to meet a guardian.",
+        mapGuide: "Each bright spot is a trial. Move close to one to start.",
+        nearGuide: (name) => `You found the ${name} trial. Press Start Trial.`,
+        correct: "Great job! You got a badge!",
+        wrong: "Look again!",
+        tryAgain: "HP minus one. That choice is gone. Look at the clue and try again.",
+        fallen: "HP is empty. Rest at camp and look at the clues again.",
+        rest: "Camp Rest",
+        restLog: "The traveler rests, gets HP back, and returns to the challenge.",
+        returnMap: "Back to Map",
+        restart: "Restart Challenge",
+        optionAction: "Option",
+        encounter: (name) => `${name} Guardian`,
+        progress: (done, total) => `Badges ${done}/${total}`,
+        rank: (rank) => `Lv. ${rank}`,
+        xpLabel: (xp) => `${xp % 100} / 100 XP`,
+        final: (score, right, total) => `Challenge complete! You got ${score} points and ${right}/${total} badges.`,
+        finalLead: "You cleared all six trials and became a world dress champion!",
+        finalScore: (score, right, total) => `Score ${score} | Badges ${right}/${total} | Great observation`,
+        reward: (xp, score) => `Nice work! You got ${xp} XP, ${score} points, and a new badge.`,
+        previewTitle: "Awaiting Challenge"
+      }
+    };
+
+    const levels = [
+      { id: "kimono", image: "assets/kimono.webp", x: 20, y: 22, country: { zh: "日本", en: "Japan" }, garment: { zh: "和服 Kimono", en: "Kimono" }, badge: { zh: "和", en: "Ki" }, clue: { zh: "觀察提示：看看衣身線條、袖口寬度，以及腰間固定服裝的方式。", en: "Clue: Look at the straight shape, wide sleeves, and the way the outfit is tied." }, note: { zh: "和服常出現在日本的節慶、茶會和重要儀式。你抓到寬袖與腰間固定方式，成功通過這關！", en: "This outfit is worn for special days in Japan. You noticed the sleeves and how it is tied. Great job!" }, options: ["韓國", "日本", "泰國", "蒙古"] },
+      { id: "sari", image: "assets/sari.webp", x: 48, y: 22, country: { zh: "印度", en: "India" }, garment: { zh: "紗麗 Sari", en: "Sari" }, badge: { zh: "紗", en: "Sa" }, clue: { zh: "觀察提示：注意布料如何包覆身體，還有色彩與花紋的表現。", en: "Clue: Notice how the cloth wraps around the body, and look at the colors and patterns." }, note: { zh: "紗麗在印度有許多穿法，不同地區會展現不同布料與花紋。你看出披掛方式，徽章入手！", en: "This outfit has many styles in India. You noticed the wrapped cloth and cleared the trial." }, options: ["越南", "埃及", "希臘", "印度"] },
+      { id: "charro", image: "assets/charro-suit.webp", x: 75, y: 23, country: { zh: "墨西哥", en: "Mexico" }, garment: { zh: "查羅套裝 Charro Suit", en: "Charro Suit" }, badge: { zh: "查", en: "Ch" }, clue: { zh: "觀察提示：這套服裝線條俐落，常有亮色飾邊，帶有正式表演感。", en: "Clue: Look for a neat suit shape, bright trim, and a formal performance feeling." }, note: { zh: "查羅套裝和墨西哥騎士文化、表演與慶典有關。你注意到俐落剪裁與亮色飾邊，成功過關！", en: "This outfit is seen in Mexico at shows and celebrations. You noticed the trim and formal style." }, options: ["西班牙", "巴西", "墨西哥", "秘魯"] },
+      { id: "hanbok", image: "assets/hanbok.webp", x: 21, y: 57, country: { zh: "韓國", en: "South Korea" }, garment: { zh: "韓服 Hanbok", en: "Hanbok" }, badge: { zh: "韓", en: "Ha" }, clue: { zh: "觀察提示：上半身較短，下半身較寬，整體線條柔和、顏色清亮。", en: "Clue: Look for a short top, a wider lower part, soft lines, and bright colors." }, note: { zh: "韓服常在節日、婚禮和文化體驗中出現。你注意到短上衣與柔和線條，成功拿下徽章！", en: "This outfit is worn in South Korea for holidays and weddings. You noticed the short top and soft shape." }, options: ["韓國", "中國", "日本", "不丹"] },
+      { id: "kilt", image: "assets/kilt.webp", x: 51, y: 53, country: { zh: "蘇格蘭", en: "Scotland" }, garment: { zh: "蘇格蘭裙 Kilt", en: "Kilt" }, badge: { zh: "格", en: "Ki" }, clue: { zh: "觀察提示：重複方格花紋很重要，正式穿著時常搭配小包與長襪。", en: "Clue: Look for a repeated square pattern, plus a small pouch and long socks." }, note: { zh: "蘇格蘭裙的格紋常和家族或地區傳統有關。你抓住方格花紋線索，通過這場試煉！", en: "This outfit is a proud symbol in Scotland. You found the square pattern clue and passed the trial." }, options: ["愛爾蘭", "加拿大", "瑞典", "蘇格蘭"] },
+      { id: "ao-dai", image: "assets/ao-dai.webp", x: 76, y: 57, country: { zh: "越南", en: "Vietnam" }, garment: { zh: "奧黛 Ao Dai", en: "Ao Dai" }, badge: { zh: "奧", en: "Ao" }, clue: { zh: "觀察提示：上衣很修長，領口較高，行走時兩側會有明顯開口。", en: "Clue: Look for a long top, a high collar, and side openings that move when walking." }, note: { zh: "奧黛常見於越南學校、節慶、婚禮和正式場合。你看出長上衣與開衩線索，最後一枚徽章到手！", en: "This outfit is worn in Vietnam for school events, festivals, and weddings. You spotted the long top and side openings." }, options: ["寮國", "越南", "馬來西亞", "菲律賓"] }
+    ];
+
+    const optionTranslations = {
+      "日本": "Japan", "韓國": "South Korea", "泰國": "Thailand", "蒙古": "Mongolia", "印度": "India", "越南": "Vietnam", "埃及": "Egypt", "希臘": "Greece", "墨西哥": "Mexico", "西班牙": "Spain", "巴西": "Brazil", "秘魯": "Peru", "中國": "China", "不丹": "Bhutan", "蘇格蘭": "Scotland", "愛爾蘭": "Ireland", "加拿大": "Canada", "瑞典": "Sweden", "寮國": "Laos", "馬來西亞": "Malaysia", "菲律賓": "Philippines"
+    };
+
+    const characters = {
+      male: "assets/hero-male.webp",
+      female: "assets/hero-female.webp"
+    };
+
+    const state = {
+      started: false,
+      character: "male",
+      score: 0,
+      xp: 0,
+      hp: 3,
+      correct: 0,
+      player: { x: 50, y: 83 },
+      velocity: { x: 0, y: 0 },
+      joystickActive: false,
+      encounterOpen: false,
+      encounterIndex: null,
+      encounterSolved: false,
+      needsRest: false,
+      complete: false,
+      wrongChoices: new Set(),
+      earned: new Set(),
+      musicOn: false,
+      soundOn: true,
+      voiceOn: true
+    };
+
+    const nodes = {
+      introScreen: document.querySelector("#introScreen"),
+      startBtn: document.querySelector("#startBtn"),
+      characterCards: document.querySelectorAll(".character-card"),
+      rank: document.querySelector("#rank"),
+      xpBar: document.querySelector("#xpBar"),
+      hearts: document.querySelector("#hearts"),
+      score: document.querySelector("#score"),
+      badges: document.querySelector("#badges"),
+      worldTitle: document.querySelector("#worldTitle"),
+      mapStatus: document.querySelector("#mapStatus"),
+      worldMap: document.querySelector("#worldMap"),
+      player: document.querySelector("#player"),
+      playerSprite: document.querySelector("#playerSprite"),
+      joystick: document.querySelector("#joystick"),
+      joystickHandle: document.querySelector("#joystickHandle"),
+      actionBtn: document.querySelector("#actionBtn"),
+      mapLog: document.querySelector("#mapLog"),
+      encounterCard: document.querySelector("#encounterCard"),
+      encounterLabel: document.querySelector("#encounterLabel"),
+      progressLabel: document.querySelector("#progressLabel"),
+      progressBar: document.querySelector("#progressBar"),
+      garmentImage: document.querySelector("#garmentImage"),
+      garmentName: document.querySelector("#garmentName"),
+      garmentNote: document.querySelector("#garmentNote"),
+      question: document.querySelector("#question"),
+      hint: document.querySelector("#hint"),
+      options: document.querySelector("#options"),
+      battleLog: document.querySelector("#battleLog"),
+      panelBtn: document.querySelector("#panelBtn"),
+      restartBtn: document.querySelector("#restartBtn"),
+      musicBtn: document.querySelector("#musicBtn"),
+      mapMusicBtn: document.querySelector("#mapMusicBtn"),
+      soundBtn: document.querySelector("#soundBtn"),
+      voiceBtn: document.querySelector("#voiceBtn")
+    };
+
+    let audioCtx;
+    let musicTimer;
+    let musicStep = 0;
+    let lastFrame = performance.now();
+
+    function dual(zh, en, separator = " / ") {
+      return zh === en ? zh : `${zh}${separator}${en}`;
+    }
+
+    function localized(value, separator = " / ") {
+      if (value && typeof value === "object" && "zh" in value && "en" in value) {
+        return dual(value.zh, value.en, separator);
+      }
+      return value;
+    }
+
+    function localizedArgs(args) {
+      return {
+        zh: args.map((arg) => arg && typeof arg === "object" && "zh" in arg ? arg.zh : arg),
+        en: args.map((arg) => arg && typeof arg === "object" && "en" in arg ? arg.en : arg)
+      };
+    }
+
+    function t(key) {
+      const zhValue = copy.zh[key];
+      const enValue = copy.en[key];
+      if (Array.isArray(zhValue) && Array.isArray(enValue)) {
+        return zhValue.map((item, index) => dual(item, enValue[index] || item, "\n"));
+      }
+      if (typeof zhValue === "function" || typeof enValue === "function") {
+        return (...args) => {
+          const localized = localizedArgs(args);
+          const zh = typeof zhValue === "function" ? zhValue(...localized.zh) : zhValue;
+          const en = typeof enValue === "function" ? enValue(...localized.en) : enValue;
+          return dual(zh, en, "\n");
+        };
+      }
+      return dual(zhValue, enValue, "\n");
+    }
+
+    function optionLabel(nameZh) {
+      return dual(nameZh, optionTranslations[nameZh]);
+    }
+
+    function badgeIconSvg(id) {
+      const icons = {
+        locked: `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M20 29v-6c0-7 5-12 12-12s12 5 12 12v6" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+            <rect x="15" y="27" width="34" height="27" rx="7" fill="currentColor" opacity=".45"/>
+            <circle cx="32" cy="40" r="4" fill="currentColor"/>
+          </svg>`,
+        kimono: `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M23 10h18l8 12-8 9v22H23V31l-8-9 8-12Z" fill="currentColor"/>
+            <path d="M31 12v41M24 20l16 14M40 20 24 34" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M22 38h20" stroke="rgba(31,41,51,.34)" stroke-width="5" stroke-linecap="round"/>
+          </svg>`,
+        sari: `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M40 9c-13 5-21 13-21 25 0 9 6 16 17 21 4-6 5-12 2-19-2-5-1-10 5-17l5-6-8-4Z" fill="currentColor"/>
+            <path d="M18 42c11 3 22-1 30-13" fill="none" stroke="rgba(255,255,255,.78)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="43" cy="16" r="3" fill="rgba(255,255,255,.85)"/>
+          </svg>`,
+        charro: `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M13 30c6-8 32-8 38 0 5 7-1 12-19 12S8 37 13 30Z" fill="currentColor"/>
+            <path d="M24 23c2-8 14-8 16 0l3 9H21l3-9Z" fill="currentColor"/>
+            <path d="M17 32c8 4 22 4 30 0M24 28h16" fill="none" stroke="rgba(255,255,255,.82)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="22" cy="34" r="2" fill="rgba(255,255,255,.9)"/><circle cx="42" cy="34" r="2" fill="rgba(255,255,255,.9)"/>
+          </svg>`,
+        hanbok: `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M22 12h20l7 15-10 4-7-9-7 9-10-4 7-15Z" fill="currentColor"/>
+            <path d="M24 30h16l8 24H16l8-24Z" fill="currentColor" opacity=".82"/>
+            <path d="M32 15v35M24 31h16" fill="none" stroke="rgba(255,255,255,.82)" stroke-width="4" stroke-linecap="round"/>
+          </svg>`,
+        kilt: `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M19 12h26l6 14-7 28H20l-7-28 6-14Z" fill="currentColor"/>
+            <path d="M23 14v39M32 14v39M41 14v39M16 27h32M18 38h28" fill="none" stroke="rgba(255,255,255,.78)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M21 13h22" stroke="rgba(31,41,51,.34)" stroke-width="5" stroke-linecap="round"/>
+          </svg>`,
+        "ao-dai": `
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M25 10h14l5 14-7 5 7 25H20l7-25-7-5 5-14Z" fill="currentColor"/>
+            <path d="M32 12v42M25 23h14M24 54c4-8 12-8 16 0" fill="none" stroke="rgba(255,255,255,.82)" stroke-width="4" stroke-linecap="round"/>
+          </svg>`
+      };
+      return icons[id] || icons.locked;
+    }
+
+    function badgePalette(id) {
+      const palettes = {
+        kimono: { color: "#c05f3d", soft: "rgba(192, 95, 61, 0.14)" },
+        sari: { color: "#b15a8a", soft: "rgba(177, 90, 138, 0.15)" },
+        charro: { color: "#21706f", soft: "rgba(33, 112, 111, 0.15)" },
+        hanbok: { color: "#4d78b7", soft: "rgba(77, 120, 183, 0.15)" },
+        kilt: { color: "#5d7a3b", soft: "rgba(93, 122, 59, 0.15)" },
+        "ao-dai": { color: "#8f5ca8", soft: "rgba(143, 92, 168, 0.15)" }
+      };
+      return palettes[id] || { color: "#c88f2d", soft: "rgba(200, 143, 45, 0.16)" };
+    }
+
+    function english(value) {
+      if (value && typeof value === "object" && "en" in value) return value.en;
+      if (typeof value === "string" && optionTranslations[value]) return optionTranslations[value];
+      return value || "";
+    }
+
+    function speakEnglish(parts) {
+      if (!state.voiceOn || !("speechSynthesis" in window)) return;
+      const text = parts
+        .flat()
+        .map((part) => String(part || "").replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .join(". ");
+      if (!text) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = 0.92;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakEncounter(level) {
+      speakEnglish([
+        "Mystery outfit trial",
+        copy.en.question,
+        english(level.clue),
+        level.options.map((option, index) => `${copy.en.optionAction} ${index + 1}: ${english(option)}`)
+      ]);
+    }
+
+    function speakAnswer(level, isCorrect, xpGain = 0, scoreGain = 0) {
+      speakEnglish([
+        isCorrect ? copy.en.correct : copy.en.wrong,
+        isCorrect ? english(level.note) : "",
+        isCorrect ? copy.en.reward(xpGain, scoreGain) : (state.needsRest ? copy.en.fallen : copy.en.tryAgain)
+      ]);
+    }
+
+    function rank() {
+      return Math.floor(state.xp / 100) + 1;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function updateFacing(horizontal) {
+      if (horizontal < -0.08) {
+        nodes.player.classList.add("face-left");
+      } else if (horizontal > 0.08) {
+        nodes.player.classList.remove("face-left");
+      }
+    }
+
+    function distanceToLevel(index) {
+      const level = levels[index];
+      return Math.hypot(state.player.x - level.x, state.player.y - level.y);
+    }
+
+    function nearbyIndex() {
+      let best = null;
+      let bestDistance = Infinity;
+      levels.forEach((level, index) => {
+        if (state.earned.has(index)) return;
+        const distance = distanceToLevel(index);
+        if (distance <= 9.5 && distance < bestDistance) {
+          best = index;
+          bestDistance = distance;
+        }
+      });
+      return best;
+    }
+
+    function previewIndex() {
+      if (state.encounterIndex !== null) return state.encounterIndex;
+      const near = nearbyIndex();
+      if (near !== null) return near;
+      const unsolved = levels.findIndex((level, index) => !state.earned.has(index));
+      return unsolved === -1 ? 0 : unsolved;
+    }
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, duration = 0.12, type = "sine", gainValue = 0.05, delay = 0, ignoreSoundToggle = false) {
+      if ((!ignoreSoundToggle && !state.soundOn) || !audioCtx) return;
+      const now = audioCtx.currentTime + delay;
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(gainValue, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.03);
+    }
+
+    function sfx(name) {
+      ensureAudio();
+      if (name === "correct") {
+        playTone(523.25, 0.1, "triangle", 0.055);
+        playTone(659.25, 0.12, "triangle", 0.055, 0.08);
+        playTone(783.99, 0.15, "triangle", 0.055, 0.18);
+      } else if (name === "wrong") {
+        playTone(220, 0.16, "sawtooth", 0.04);
+        playTone(164.81, 0.2, "sawtooth", 0.038, 0.12);
+      } else if (name === "step") {
+        playTone(392, 0.08, "sine", 0.035);
+      } else if (name === "rest") {
+        playTone(261.63, 0.16, "triangle", 0.04);
+        playTone(329.63, 0.18, "triangle", 0.04, 0.14);
+      } else if (name === "complete") {
+        [392, 523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((freq, index) => {
+          playTone(freq, 0.16, "triangle", 0.06, index * 0.085);
+        });
+        [196, 261.63, 329.63, 392].forEach((freq, index) => {
+          playTone(freq, 0.42, "sine", 0.026, index * 0.16);
+        });
+      }
+    }
+
+    function playMusicNote() {
+      if (!state.musicOn || !audioCtx) return;
+      const melody = [329.63, 392, 493.88, 440, 392, 329.63, 293.66, 329.63];
+      const bass = [164.81, 164.81, 196, 196, 146.83, 146.83, 130.81, 130.81];
+      playTone(melody[musicStep % melody.length], 0.34, "triangle", 0.018, 0, true);
+      playTone(bass[musicStep % bass.length], 0.46, "sine", 0.012, 0, true);
+      musicStep += 1;
+    }
+
+    function startMusic() {
+      ensureAudio();
+      state.musicOn = true;
+      syncMusicButtons();
+      if (!musicTimer) {
+        playMusicNote();
+        musicTimer = window.setInterval(playMusicNote, 470);
+      }
+    }
+
+    function stopMusic() {
+      state.musicOn = false;
+      syncMusicButtons();
+      if (musicTimer) {
+        window.clearInterval(musicTimer);
+        musicTimer = null;
+      }
+    }
+
+    function syncMusicButtons() {
+      [nodes.musicBtn, nodes.mapMusicBtn].forEach((button) => {
+        button.textContent = state.musicOn ? t("musicOn") : t("musicOff");
+        button.classList.toggle("active", state.musicOn);
+      });
+    }
+
+    function renderStaticText() {
+      document.documentElement.lang = "zh-Hant";
+      document.querySelectorAll("[data-i18n]").forEach((node) => {
+        node.textContent = t(node.dataset.i18n);
+      });
+      syncMusicButtons();
+      nodes.soundBtn.textContent = state.soundOn ? t("soundOn") : t("soundOff");
+      nodes.soundBtn.classList.toggle("active", state.soundOn);
+      nodes.voiceBtn.textContent = state.voiceOn ? t("voiceOn") : t("voiceOff");
+      nodes.voiceBtn.classList.toggle("active", state.voiceOn);
+      nodes.characterCards.forEach((card) => {
+        card.classList.toggle("active", card.dataset.character === state.character);
+      });
+    }
+
+    function renderHud() {
+      nodes.rank.textContent = t("rank")(rank());
+      nodes.xpBar.style.width = `${state.xp % 100}%`;
+      nodes.xpBar.setAttribute("aria-label", t("xpLabel")(state.xp));
+      nodes.score.textContent = state.score;
+
+      nodes.hearts.innerHTML = "";
+      for (let i = 0; i < 3; i += 1) {
+        const heart = document.createElement("span");
+        heart.className = `heart${i >= state.hp ? " empty" : ""}`;
+        nodes.hearts.appendChild(heart);
+      }
+
+      nodes.badges.innerHTML = "";
+      levels.forEach((level, index) => {
+        const palette = badgePalette(level.id);
+        const badge = document.createElement("span");
+        badge.className = `badge${state.earned.has(index) ? " earned" : ""}`;
+        badge.innerHTML = badgeIconSvg(state.earned.has(index) ? level.id : "locked");
+        badge.title = localized(level.garment);
+        badge.setAttribute("aria-label", state.earned.has(index) ? localized(level.garment) : "尚未取得徽章");
+        if (state.earned.has(index)) {
+          badge.style.setProperty("--badge-color", palette.color);
+        }
+        nodes.badges.appendChild(badge);
+      });
+    }
+
+    function renderWorld() {
+      const near = nearbyIndex();
+      nodes.worldTitle.textContent = t("worldTitle");
+      nodes.mapStatus.textContent = state.complete ? t("complete") : (near !== null ? t("ready") : t("approaching"));
+      nodes.actionBtn.textContent = near !== null && !state.complete ? t("actionExplore") : t("actionApproach");
+      nodes.actionBtn.disabled = state.complete || near === null || state.encounterOpen;
+      nodes.playerSprite.src = characters[state.character];
+      nodes.player.style.left = `${state.player.x}%`;
+      nodes.player.style.top = `${state.player.y}%`;
+
+      if (state.complete) {
+        nodes.mapLog.textContent = t("final")(state.score, state.correct, levels.length);
+      } else if (near !== null) {
+        nodes.mapLog.textContent = t("nearGuide")(levels[near].garment);
+      } else {
+        nodes.mapLog.textContent = t("mapGuide");
+      }
+
+      nodes.worldMap.querySelectorAll(".landmark, .scan-ring").forEach((node) => node.remove());
+      levels.forEach((item, index) => {
+        if (!state.earned.has(index)) {
+          const ring = document.createElement("div");
+          ring.className = "scan-ring";
+          ring.style.left = `${item.x}%`;
+          ring.style.top = `${item.y}%`;
+          nodes.worldMap.appendChild(ring);
+        }
+
+        const landmark = document.createElement("div");
+        landmark.className = "landmark";
+        if (state.earned.has(index)) landmark.classList.add("done");
+        if (index === near) landmark.classList.add("near");
+        landmark.style.left = `${item.x}%`;
+        landmark.style.top = `${item.y}%`;
+        const label = `神秘試煉 ${index + 1}`;
+        const landmarkHint = state.earned.has(index)
+          ? localized(item.garment)
+          : `Mystery Trial ${index + 1}`;
+        landmark.innerHTML = `<strong>${label}</strong><small>${landmarkHint}</small>`;
+        nodes.worldMap.appendChild(landmark);
+      });
+    }
+
+    function renderCompletionBadges() {
+      nodes.options.innerHTML = "";
+      levels.forEach((level) => {
+        const palette = badgePalette(level.id);
+        const badge = document.createElement("div");
+        badge.className = "completion-badge";
+        badge.innerHTML = badgeIconSvg(level.id);
+        badge.title = `${localized(level.garment)} - ${localized(level.country)}`;
+        badge.setAttribute("aria-label", `${localized(level.garment)} - ${localized(level.country)}`);
+        badge.style.setProperty("--badge-color", palette.color);
+        badge.style.setProperty("--badge-soft", palette.soft);
+        nodes.options.appendChild(badge);
+      });
+    }
+
+    function renderEncounterPlaceholder() {
+      const level = levels[previewIndex()];
+      nodes.encounterCard.classList.toggle("active", state.complete);
+      nodes.encounterCard.classList.toggle("locked", !state.complete);
+      nodes.encounterCard.classList.toggle("complete-card", state.complete);
+      document.body.classList.toggle("modal-open", state.complete);
+      nodes.encounterLabel.textContent = state.complete ? t("complete") : t("previewTitle");
+      nodes.progressLabel.textContent = t("progress")(state.earned.size, levels.length);
+      nodes.progressBar.style.width = `${(state.earned.size / levels.length) * 100}%`;
+      nodes.garmentImage.src = state.complete ? characters[state.character] : level.image;
+      nodes.garmentImage.alt = state.complete ? "通關旅人 / Challenge champion" : "神秘服飾 / Mystery outfit";
+      nodes.garmentName.textContent = state.complete ? t("complete") : "神秘服飾試煉\nMystery Outfit Trial";
+      nodes.garmentNote.textContent = state.complete ? t("final")(state.score, state.correct, levels.length) : "先觀察圖片與提示，答對後才會揭曉服飾名稱。\nLook at the picture and clue. The outfit name appears after you win.";
+      nodes.question.textContent = state.complete ? t("finalLead") : t("lockedEncounter");
+      nodes.hint.textContent = state.complete ? t("finalScore")(state.score, state.correct, levels.length) : localized(level.clue, "\n");
+      if (state.complete) {
+        renderCompletionBadges();
+      } else {
+        nodes.options.innerHTML = "";
+      }
+      nodes.battleLog.textContent = state.complete ? t("final")(state.score, state.correct, levels.length) : t("lockedEncounter");
+      nodes.panelBtn.textContent = state.complete ? t("complete") : t("returnMap");
+      nodes.panelBtn.disabled = true;
+    }
+
+    function renderOptions(level) {
+      nodes.options.innerHTML = "";
+      level.options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "option";
+        button.innerHTML = `<span>${t("optionAction")} ${index + 1}</span>${optionLabel(option)}`;
+        if (option === level.country.zh && state.encounterSolved) {
+          button.classList.add("correct");
+          button.disabled = true;
+        } else if (state.wrongChoices.has(option)) {
+          button.classList.add("wrong");
+          button.disabled = true;
+        } else if (state.needsRest || state.encounterSolved) {
+          button.disabled = true;
+        } else {
+          button.addEventListener("click", () => answer(option));
+        }
+        nodes.options.appendChild(button);
+      });
+    }
+
+    function renderEncounter() {
+      if (!state.encounterOpen && !state.complete) {
+        renderEncounterPlaceholder();
+        return;
+      }
+
+      if (state.complete) {
+        renderEncounterPlaceholder();
+        return;
+      }
+
+      const level = levels[state.encounterIndex];
+      nodes.encounterCard.classList.remove("locked");
+      nodes.encounterCard.classList.remove("complete-card");
+      nodes.encounterCard.classList.add("active");
+      document.body.classList.add("modal-open");
+      nodes.encounterLabel.textContent = `神秘試煉 ${state.encounterIndex + 1}\nMystery Trial ${state.encounterIndex + 1}`;
+      nodes.progressLabel.textContent = t("progress")(state.earned.size, levels.length);
+      nodes.progressBar.style.width = `${(state.earned.size / levels.length) * 100}%`;
+      nodes.garmentImage.src = level.image;
+      nodes.garmentImage.alt = state.encounterSolved ? `${localized(level.garment)} - ${localized(level.country)}` : "神秘服飾 / Mystery outfit";
+      nodes.garmentName.textContent = state.encounterSolved ? localized(level.garment) : "神秘服飾試煉\nMystery Outfit Trial";
+      nodes.garmentNote.textContent = state.encounterSolved ? localized(level.note, "\n") : "先觀察圖片與提示，答對後才會揭曉服飾名稱。\nLook at the picture and clue. The outfit name appears after you win.";
+      nodes.question.textContent = t("question");
+      nodes.hint.textContent = localized(level.clue, "\n");
+      renderOptions(level);
+      nodes.panelBtn.textContent = state.needsRest ? t("rest") : t("returnMap");
+      nodes.panelBtn.disabled = !(state.needsRest || state.encounterSolved);
+      if (!state.needsRest && !state.encounterSolved && !nodes.battleLog.textContent) {
+        nodes.battleLog.textContent = t("question");
+      }
+    }
+
+    function render() {
+      renderStaticText();
+      renderHud();
+      renderWorld();
+      renderEncounter();
+    }
+
+    function startGame() {
+      ensureAudio();
+      state.started = true;
+      document.body.classList.add("game-started");
+      nodes.introScreen.classList.add("hidden");
+      sfx("step");
+      render();
+      if (!state.musicOn) startMusic();
+    }
+
+    function openEncounter() {
+      const index = nearbyIndex();
+      if (index === null || state.complete) return;
+      ensureAudio();
+      sfx("step");
+      state.encounterOpen = true;
+      state.encounterIndex = index;
+      state.encounterSolved = false;
+      state.needsRest = false;
+      state.wrongChoices = new Set();
+      nodes.battleLog.textContent = t("question");
+      render();
+      speakEncounter(levels[index]);
+    }
+
+    function answer(choice) {
+      if (!state.encounterOpen || state.encounterSolved || state.needsRest) return;
+      ensureAudio();
+      const level = levels[state.encounterIndex];
+      const isCorrect = choice === level.country.zh;
+      if (isCorrect) {
+        const xpGain = 40 + state.earned.size * 5;
+        const scoreGain = 120 + state.earned.size * 15;
+        state.xp += xpGain;
+        state.score += scoreGain;
+        state.correct += 1;
+        state.earned.add(state.encounterIndex);
+        state.encounterSolved = true;
+        nodes.battleLog.innerHTML = `<strong>${t("correct")}</strong>${localized(level.note, "<br>")}<br>${t("reward")(xpGain, scoreGain)}`;
+        nodes.encounterLabel.textContent = t("encounter")(level.garment);
+        nodes.garmentImage.alt = `${localized(level.garment)} - ${localized(level.country)}`;
+        nodes.garmentName.textContent = localized(level.garment);
+        nodes.garmentNote.textContent = localized(level.note, "\n");
+        const finishedAll = state.earned.size >= levels.length;
+        sfx(finishedAll ? "complete" : "correct");
+        speakAnswer(level, true, xpGain, scoreGain);
+        if (finishedAll) {
+          state.complete = true;
+          state.encounterOpen = false;
+          state.encounterIndex = null;
+          state.encounterSolved = false;
+          state.wrongChoices = new Set();
+          render();
+          return;
+        }
+      } else {
+        state.hp = Math.max(0, state.hp - 1);
+        state.wrongChoices.add(choice);
+        state.needsRest = state.hp === 0;
+        nodes.battleLog.innerHTML = `<strong>${t("wrong")}</strong>${state.needsRest ? t("fallen") : t("tryAgain")}`;
+        sfx("wrong");
+        speakAnswer(level, false);
+      }
+      renderHud();
+      renderWorld();
+      renderOptions(level);
+      nodes.panelBtn.textContent = state.needsRest ? t("rest") : t("returnMap");
+      nodes.panelBtn.disabled = !(state.needsRest || state.encounterSolved);
+    }
+
+    function closeEncounter() {
+      ensureAudio();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      if (state.needsRest) {
+        state.hp = 3;
+        state.needsRest = false;
+        state.encounterOpen = false;
+        state.encounterIndex = null;
+        state.wrongChoices = new Set();
+        nodes.battleLog.textContent = t("restLog");
+        sfx("rest");
+        render();
+        return;
+      }
+
+      if (state.encounterSolved) {
+        state.encounterOpen = false;
+        state.encounterIndex = null;
+        state.encounterSolved = false;
+        state.wrongChoices = new Set();
+        state.complete = state.earned.size >= levels.length;
+        sfx(state.complete ? "complete" : "step");
+        render();
+      }
+    }
+
+    function restart() {
+      ensureAudio();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      state.score = 0;
+      state.xp = 0;
+      state.hp = 3;
+      state.correct = 0;
+      state.player = { x: 50, y: 83 };
+      state.velocity = { x: 0, y: 0 };
+      state.encounterOpen = false;
+      state.encounterIndex = null;
+      state.encounterSolved = false;
+      state.needsRest = false;
+      state.complete = false;
+      state.wrongChoices = new Set();
+      state.earned = new Set();
+      nodes.battleLog.textContent = "";
+      sfx("step");
+      render();
+    }
+
+    function setJoystickFromPointer(event) {
+      const rect = nodes.joystick.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const rawX = event.clientX - centerX;
+      const rawY = event.clientY - centerY;
+      const max = rect.width * 0.32;
+      const distance = Math.hypot(rawX, rawY);
+      const scale = distance > max ? max / distance : 1;
+      const x = rawX * scale;
+      const y = rawY * scale;
+      state.velocity.x = clamp(rawX / max, -1, 1);
+      state.velocity.y = clamp(rawY / max, -1, 1);
+      updateFacing(state.velocity.x);
+      nodes.joystickHandle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    }
+
+    function resetJoystick() {
+      state.joystickActive = false;
+      state.velocity.x = 0;
+      state.velocity.y = 0;
+      nodes.joystickHandle.style.transform = "translate(-50%, -50%)";
+      nodes.player.classList.remove("moving");
+    }
+
+    function gameLoop(now) {
+      const delta = Math.min((now - lastFrame) / 1000, 0.05);
+      lastFrame = now;
+      if (state.joystickActive && !state.encounterOpen && !state.complete && state.started) {
+        const speed = 23;
+        state.player.x = clamp(state.player.x + state.velocity.x * speed * delta, 5, 95);
+        state.player.y = clamp(state.player.y + state.velocity.y * speed * delta, 7, 93);
+        nodes.player.classList.add("moving");
+        renderWorld();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    nodes.joystick.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      ensureAudio();
+      state.joystickActive = true;
+      if (nodes.joystick.setPointerCapture && event.pointerId !== undefined) {
+        try {
+          nodes.joystick.setPointerCapture(event.pointerId);
+        } catch (error) {
+          // Some synthetic or older pointer events cannot be captured.
+        }
+      }
+      setJoystickFromPointer(event);
+    });
+
+    nodes.joystick.addEventListener("pointermove", (event) => {
+      if (!state.joystickActive) return;
+      event.preventDefault();
+      setJoystickFromPointer(event);
+    });
+
+    nodes.joystick.addEventListener("pointerup", resetJoystick);
+    nodes.joystick.addEventListener("pointercancel", resetJoystick);
+    nodes.joystick.addEventListener("lostpointercapture", resetJoystick);
+
+    window.addEventListener("keydown", (event) => {
+      if (state.encounterOpen || !state.started) return;
+      const keys = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1]
+      };
+      if (!keys[event.key]) return;
+      const [x, y] = keys[event.key];
+      state.player.x = clamp(state.player.x + x * 2.5, 5, 95);
+      state.player.y = clamp(state.player.y + y * 2.5, 7, 93);
+      updateFacing(x);
+      nodes.player.classList.add("moving");
+      window.setTimeout(() => nodes.player.classList.remove("moving"), 180);
+      renderWorld();
+    });
+
+    nodes.characterCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        state.character = card.dataset.character;
+        sfx("step");
+        render();
+      });
+    });
+
+    nodes.startBtn.addEventListener("click", startGame);
+    nodes.actionBtn.addEventListener("click", openEncounter);
+    nodes.panelBtn.addEventListener("click", closeEncounter);
+    nodes.restartBtn.addEventListener("click", restart);
+
+    nodes.musicBtn.addEventListener("click", () => {
+      if (state.musicOn) {
+        stopMusic();
+      } else {
+        startMusic();
+      }
+    });
+
+    nodes.mapMusicBtn.addEventListener("click", () => {
+      if (state.musicOn) {
+        stopMusic();
+      } else {
+        startMusic();
+      }
+    });
+
+    nodes.soundBtn.addEventListener("click", () => {
+      ensureAudio();
+      state.soundOn = !state.soundOn;
+      nodes.soundBtn.textContent = state.soundOn ? t("soundOn") : t("soundOff");
+      nodes.soundBtn.classList.toggle("active", state.soundOn);
+      if (state.soundOn) sfx("step");
+    });
+
+    nodes.voiceBtn.addEventListener("click", () => {
+      state.voiceOn = !state.voiceOn;
+      nodes.voiceBtn.textContent = state.voiceOn ? t("voiceOn") : t("voiceOff");
+      nodes.voiceBtn.classList.toggle("active", state.voiceOn);
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      if (state.voiceOn && state.encounterOpen && state.encounterIndex !== null && !state.encounterSolved && !state.needsRest) {
+        speakEncounter(levels[state.encounterIndex]);
+      }
+    });
+
+    render();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
